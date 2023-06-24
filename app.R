@@ -1,52 +1,72 @@
-pacman::p_load(shiny, tidyverse, ggthemes)
+pacman::p_load(igraph, tidygraph, ggraph, 
+               visNetwork, lubridate, clock,
+               tidyverse, graphlayouts, bslib)
 
 # Read the data
-exam <- readr::read_csv("data/Exam_data.csv")
+mc2_nodes <- readRDS("data/mc2_nodes_extracted.rds")
+mc2_edges <- readRDS("data/mc2_edges_aggregated.rds")
+graph <- tbl_graph(nodes = mc2_nodes,
+                   edges = mc2_edges, 
+                   directed = TRUE)
 
 ui <- fluidPage(
-  
-    titlePanel("Examination Results Dashboard"),
- 
-    sidebarLayout(
-      position = "right",
-  # Add Sidebar     
-      sidebarPanel(
-  # Add 'selection' input1
-        selectInput(inputId = "variable",
-                    label = "Subject:",
-                    choices = c("English" = "ENGLISH",
-                                "Maths" = "MATHS",
-                                "Science" = "SCIENCE"),
-  # set default selection as "english"
-                    selected = "ENGLISH"),
-  # Slider widget for selection input1     
-        sliderInput(inputId = "bins",
-                    label = "Number of Bins",
-                    min = 5,
-                    max = 20,
-  # set default value of slider using 'value' parameter
-                    value = 15)
-      ),
-      mainPanel(
-  # How input1 will be displayed in the output
-        plotOutput("distPlot") 
+  titlePanel(title = "Network Analysis for Fishy Trading Activity"),
+  sidebarLayout(
+    sidebarPanel = sidebarPanel(
+      selectInput(
+        inputId = "layout",
+        label = "Select layout:",
+        choices = c(
+          `Kamada and Kawai` = "kk",
+          `Fruchterman-Reingold` = "fr",
+          `Distributed Recursive` = "drl",
+          `Large Graph` = "lgl",
+          Grid = "grid",
+          Nicely = "nicely"
+        ),
+        selected = "kk"
       )
-    )
-  )
+    ),
+    mainPanel = mainPanel(
+      tabsetPanel(
+        tabPanel(
+          title = "Plot",
+          plotOutput(
+            outputId = "networkPlot",
+            height = "500px"
+          )
+        ),
+        tabPanel(
+          title = "Summary",
+          verbatimTextOutput(outputId = "summary")
+        ),
+        tabPanel(
+          title = "Table",
+          tableOutput(outputId = "table")
+        ),
+        type = "tabs"
+      )
+    ),
+    position = "right"
+  ),
+  theme = bs_theme(bootswatch = "morph")
+)
 
 server <- function(input, output) {
   
-# Define how input1 gets visualised
-  output$distPlot <- renderPlot({
+  output$networkPlot <- renderPlot({
+    set.seed(1234)
     
-    ggplot(exam, 
-           aes_string(x = input$variable)) + 
-      geom_histogram(bins = input$bins,
-                     color = "grey") +
-      labs(x = "Score",
-           y = "No. of Pupils") +
-      theme_economist() 
-      
+    ggraph(graph,
+           layout = input$layout) +
+      geom_edge_link(aes(width = weights),
+                     alpha = .6) +
+      scale_edge_width(range = c(0.1, 3)) +
+      geom_node_point(aes(color = id)) +
+      theme(legend.position = "none",
+            panel.background = element_rect(fill='#d9e3f1'),
+            plot.background = element_rect(fill='#d9e3f1'))
+    
   })
 }
 
