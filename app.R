@@ -1,50 +1,53 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+pacman::p_load(shiny, tidyverse, ggthemes)
 
-library(shiny)
+# Read the data
+exam <- readr::read_csv("data/Exam_data.csv")
 
-# Define UI for application that draws a histogram
 ui <- fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
+  
+    titlePanel("Examination Results Dashboard"),
+ 
     sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
+      position = "right",
+  # Add Sidebar     
+      sidebarPanel(
+  # Add 'selection' input1
+        selectInput(inputId = "variable",
+                    label = "Subject:",
+                    choices = c("English" = "ENGLISH",
+                                "Maths" = "MATHS",
+                                "Science" = "SCIENCE"),
+  # set default selection as "english"
+                    selected = "ENGLISH"),
+  # Slider widget for selection input1     
+        sliderInput(inputId = "bins",
+                    label = "Number of Bins",
+                    min = 5,
+                    max = 20,
+  # set default value of slider using 'value' parameter
+                    value = 15)
+      ),
+      mainPanel(
+  # How input1 will be displayed in the output
+        plotOutput("distPlot") 
+      )
     )
-)
+  )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+  
+# Define how input1 gets visualised
+  output$distPlot <- renderPlot({
+    
+    ggplot(exam, 
+           aes_string(x = input$variable)) + 
+      geom_histogram(bins = input$bins,
+                     color = "grey") +
+      labs(x = "Score",
+           y = "No. of Pupils") +
+      theme_economist() 
+      
+  })
 }
 
 # Run the application 
