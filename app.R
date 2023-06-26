@@ -1,6 +1,6 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib)
+               tidyverse, graphlayouts, bslib, plotly)
 
 # Read the data
 mc2_nodes <- readRDS("data/mc2_nodes_extracted.rds")
@@ -9,50 +9,60 @@ graph <- tbl_graph(nodes = mc2_nodes,
                    edges = mc2_edges, 
                    directed = TRUE)
 
-ui <- fluidPage(
-  titlePanel(title = "Network Analysis for Fishy Trading Activity"),
-  sidebarLayout(
-    sidebarPanel = sidebarPanel(
-      selectInput(
-        inputId = "layout",
-        label = "Select layout:",
-        choices = c(
-          `Kamada and Kawai` = "kk",
-          `Fruchterman-Reingold` = "fr",
-          `Distributed Recursive` = "drl",
-          `Large Graph` = "lgl",
-          Grid = "grid",
-          Nicely = "nicely"
-        ),
-        selected = "kk"
-      )
+## Anomalies Data
+
+## Groups
+
+
+
+ui <- page_navbar(
+  title = "Network Analysis for Fishy Trading Activity",
+  sidebar = sidebar(
+    bg = "white",
+    accordion(
+      accordion_panel(
+        "Primary Controls")
     ),
-    mainPanel = mainPanel(
-      tabsetPanel(
-        tabPanel(
-          title = "Plot",
-          plotOutput(
-            outputId = "networkPlot",
-            height = "500px"
-          )
-        ),
-        tabPanel(
-          title = "Summary",
-          verbatimTextOutput(outputId = "summary")
-        ),
-        tabPanel(
-          title = "Table",
-          tableOutput(outputId = "table")
-        ),
-        type = "tabs"
-      )
-    ),
-    position = "right"
+    accordion_panel(
+      "Other Controls",
+      "Other Controls go here"
+    )
   ),
-  theme = bs_theme(bootswatch = "morph")
+  nav_panel("Anomalous Behaviours"),
+  nav_panel("Anomalies",
+    column(
+      width = 2,
+      fluidRow(
+        selectInput("type", "Type", choices = c("Companies", "Beneficial Owners")),
+        selectInput("countries", "Countries of Operation", choices = c("Single Country", "Multiple Countries")),
+        selectInput("revenue", "Revenue", choices = c("High", "Medium", "Low", "Unreported"))
+      )
+    ),
+    fluidRow(
+      column(
+        width = 5,
+        plotly::plotlyOutput("graph")
+      ),
+      column(
+        width = 5,
+        p("Other content goes here.")
+      )
+    )
+  ),       
+  nav_panel("Groups"),
+  nav_spacer(),
+  theme = bs_theme((version = 5), #prevent dashboard breaking
+    bootswatch = "morph"
+  )
+  
 )
 
+
+### SERVER PAGE###
+
 server <- function(input, output) {
+  
+### Server > Anomalies
   
   output$networkPlot <- renderPlot({
     set.seed(1234)
@@ -68,6 +78,12 @@ server <- function(input, output) {
             plot.background = element_rect(fill='#d9e3f1'))
     
   })
+  
+  
+  ### Server > Groups
+  
+  
+  ###
 }
 
 # Run the application 
