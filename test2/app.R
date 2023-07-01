@@ -65,7 +65,10 @@ server <- function(input, output) {
                                   edges = filtered_links, 
                                   directed = FALSE)
     
-    # Define Similarity Measure
+   # Define Similarity Measure -- may need to use ifelse statements here
+    #ifelse input$measure == "measureName", "usethismeasure", if not then proceed to next ifelse statement >>
+      #ifelse input$measure
+    
     V(filtered_graph)$degree <- degree(filtered_graph, mode = "all")
     
     set.seed(1234)
