@@ -20,6 +20,26 @@ ui <- fluidPage(
           `Company Contact` = "Company Contact"
         ),
         selected = "Ultimate Beneficial Owner"
+      ),
+      selectInput(
+        inputId = "revenue",
+        label = "Revenue Group:",
+        choices = c(
+          "High",
+          "Medium",
+          "Low",
+          "Unreported"
+        ),
+        multiple = TRUE
+      ),
+      selectInput(
+        inputId = "transboundary",
+        label = "Transboundary:",
+        choices = c(
+          "Yes",
+          "No"
+        ),
+        multiple = TRUE
       )
     ),
     mainPanel = mainPanel(
@@ -36,7 +56,7 @@ server <- function(input, output) {
     
     # Extract nodes from input$entity
     filter_nodes <- nodes %>%
-      filter(group == input$entity)
+      filter(group == input$entity & revenue %in% input$revenue & transboundary %in% input$transboundary)
     
     filter_links <- links %>%
       filter(target %in% filter_nodes$id)
@@ -56,7 +76,6 @@ server <- function(input, output) {
              "to" = "target")
     
     # Plot network
-    
     visNetwork(
       total_nodes, 
       total_links,
@@ -73,10 +92,9 @@ server <- function(input, output) {
         highlightNearest = list(enabled = T, degree = 2, hover = T),
         # Add drop-down menu to filter by company name
         nodesIdSelection = TRUE,
-        collapse = TRUE) %>%
+        collapse = TRUE
+      ) %>%
       visInteraction(navigationButtons = TRUE)
-    
-    
   })
 }
 
