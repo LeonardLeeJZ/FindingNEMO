@@ -1,93 +1,83 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib, plotly, jsonlite, stringr)
-
-# BSLIB vs RShiny
-#differences: grids used, function calls are different, + colour palette and font palette 
-###install showtext
+               tidyverse, graphlayouts, bslib)
 
 # Read the data
-#mc2_nodes <- readRDS("data/mc2_nodes_extracted.rds")
+nodes <- read_csv("data/mc3_shinynodes.csv")
+links <- read_csv("data/mc3_links_new.csv")
 
-#mc2_edges <- readRDS("data/mc2_edges_aggregated.rds")
-#graph <- tbl_graph(nodes = mc2_nodes,
-                  # edges = mc2_edges, 
-                   #directed = TRUE)\
-mc3_data <- fromJSON("data/MC3.json")
-
-
-## Anomalies Data
-anom_nodes <- read_csv("data/anom_nodes.csv")
-
-
-anom_edges <- read_csv("data/anom_edges.csv")
-
-
-## Groups
-
-
-
-ui <- page_navbar(
-  title = "Network Analysis for Fishy Trading Activity",
-  nav_panel("Anomalous Behaviours"),
-  nav_panel("Anomalies",
-            column(
-              width = 5,
-              fluidRow(
-                column(
-                  width = 12,
-                  checkboxGroupInput("type_filter", "Type", choices = unique(anom_nodes$type), selected = NULL)
-                ),
-                column(
-                  width = 12,
-                  checkboxGroupInput("transboundary_filter", "Transboundary", choices = c("Yes" = "yes", "No" = "no"), selected = NULL)
-                ),
-                column(
-                  width = 12,
-                  checkboxGroupInput("revenue_group_filter", "Revenue", choices = c("High" = 1, "Medium" = 2, "Low" = 3, "Undeclared" = NA), selected = NULL)
-                )
-              ),
-              fluidRow(
-                column(
-                  width = 12,
-                  visNetworkOutput("Anom_Graph")
-                )
-              )
-            )
-  ),       
-  nav_panel("Groups"),
-  nav_spacer(),
-  theme = bs_theme(version = 5, bootswatch = "morph")
+ui <- fluidPage(
+  titlePanel(title = "Network Analysis for Fishy Trading Activity"),
+  sidebarLayout(
+    sidebarPanel = sidebarPanel(
+      selectInput(
+        inputId = "entity",
+        label = "Select Entity:",
+        choices = c(
+          `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
+          `Shareholder` = "Shareholder",
+          `Multi-role Entity` = "Multi-role Entity",
+          `Company Contact` = "Company Contact"
+        ),
+        selected = "Ultimate Beneficial Owner"
+      )
+    ),
+    mainPanel = mainPanel(
+          title = "Network",
+          visNetworkOutput("networkPlot")
+          )
+        ),
+  theme = bs_theme(bootswatch = "morph")
 )
-
-
-
-
-### SERVER PAGE###
 
 server <- function(input, output) {
   
-  ### Server > Hailey
-  
-### Server > Anomalies
-
-  output$Anom_Graph <- renderVisNetwork({
-    filtered_nodes <- anom_nodes %>%
-      mutate(type = str_trim(type)) %>%
-      filter(type %in% input$type_filter) %>%
-      filter(transboundary %in% input$transboundary_filter) %>%
-      filter(revenue_group %in% input$revenue_group_filter)
+  output$networkPlot <- renderVisNetwork({
     
-    visNetwork(filtered_nodes, anom_edges) %>%
-      visOptions(highlightNearest = TRUE)
+    # Extract nodes from input$entity
+    filter_nodes <- nodes %>%
+      filter(group == input$entity)
+    
+    filter_links <- links %>%
+      filter(target %in% filter_nodes$id)
+    
+    # distinct source and target from filter_links
+    distinct_source <- filter_links %>%
+      distinct(source) %>%
+      rename("id" = "source") 
+    
+    distinct_target <- filter_links %>%
+      distinct(target) %>%
+      rename("id" = "target")
+    
+    total_nodes <- bind_rows(distinct_source, distinct_target)
+    total_links <- filter_links %>%
+      rename("from" = "source",
+             "to" = "target")
+    
+    # Plot network
+    
+    visNetwork(
+      total_nodes, 
+      total_links,
+      width = "100%"
+    ) %>%
+      visIgraphLayout(
+        layout = "layout_with_fr"
+      ) %>%
+      visLegend() %>%
+      visGroups() %>%
+      visEdges() %>%
+      visOptions(
+        # Specify additional Interactive Elements
+        highlightNearest = list(enabled = T, degree = 2, hover = T),
+        # Add drop-down menu to filter by company name
+        nodesIdSelection = TRUE,
+        collapse = TRUE) %>%
+      visInteraction(navigationButtons = TRUE)
+    
+    
   })
-  
- 
-  
-  ### Server > Groups
-  
-  
-  ###
 }
 
 # Run the application 
