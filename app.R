@@ -1,15 +1,27 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib, plotly)
+               tidyverse, graphlayouts, bslib, plotly, jsonlite, stringr)
+
+# BSLIB vs RShiny
+#differences: grids used, function calls are different, + colour palette and font palette 
+###install showtext
 
 # Read the data
-mc2_nodes <- readRDS("data/mc2_nodes_extracted.rds")
-mc2_edges <- readRDS("data/mc2_edges_aggregated.rds")
-graph <- tbl_graph(nodes = mc2_nodes,
-                   edges = mc2_edges, 
-                   directed = TRUE)
+#mc2_nodes <- readRDS("data/mc2_nodes_extracted.rds")
+
+#mc2_edges <- readRDS("data/mc2_edges_aggregated.rds")
+#graph <- tbl_graph(nodes = mc2_nodes,
+                  # edges = mc2_edges, 
+                   #directed = TRUE)\
+mc3_data <- fromJSON("data/MC3.json")
+
 
 ## Anomalies Data
+anom_nodes <- read_csv("data/anom_nodes.csv")
+
+
+anom_edges <- read_csv("data/anom_edges.csv")
+
 
 ## Groups
 
@@ -17,68 +29,60 @@ graph <- tbl_graph(nodes = mc2_nodes,
 
 ui <- page_navbar(
   title = "Network Analysis for Fishy Trading Activity",
-  sidebar = sidebar(
-    bg = "white",
-    accordion(
-      accordion_panel(
-        "Primary Controls")
-    ),
-    accordion_panel(
-      "Other Controls",
-      "Other Controls go here"
-    )
-  ),
   nav_panel("Anomalous Behaviours"),
   nav_panel("Anomalies",
-    column(
-      width = 2,
-      fluidRow(
-        selectInput("type", "Type", choices = c("Companies", "Beneficial Owners")),
-        selectInput("countries", "Countries of Operation", choices = c("Single Country", "Multiple Countries")),
-        selectInput("revenue", "Revenue", choices = c("High", "Medium", "Low", "Unreported"))
-      )
-    ),
-    fluidRow(
-      column(
-        width = 5,
-        plotly::plotlyOutput("graph")
-      ),
-      column(
-        width = 5,
-        p("Other content goes here.")
-      )
-    )
+            column(
+              width = 5,
+              fluidRow(
+                column(
+                  width = 12,
+                  checkboxGroupInput("type_filter", "Type", choices = unique(anom_nodes$type), selected = NULL)
+                ),
+                column(
+                  width = 12,
+                  checkboxGroupInput("transboundary_filter", "Transboundary", choices = c("Yes" = "yes", "No" = "no"), selected = NULL)
+                ),
+                column(
+                  width = 12,
+                  checkboxGroupInput("revenue_group_filter", "Revenue", choices = c("High" = 1, "Medium" = 2, "Low" = 3, "Undeclared" = NA), selected = NULL)
+                )
+              ),
+              fluidRow(
+                column(
+                  width = 12,
+                  visNetworkOutput("Anom_Graph")
+                )
+              )
+            )
   ),       
   nav_panel("Groups"),
   nav_spacer(),
-  theme = bs_theme((version = 5), #prevent dashboard breaking
-    bootswatch = "morph"
-  )
-  
+  theme = bs_theme(version = 5, bootswatch = "morph")
 )
+
+
 
 
 ### SERVER PAGE###
 
 server <- function(input, output) {
   
-### Server > Anomalies
+  ### Server > Hailey
   
-  output$networkPlot <- renderPlot({
-    set.seed(1234)
+### Server > Anomalies
+
+  output$Anom_Graph <- renderVisNetwork({
+    filtered_nodes <- anom_nodes %>%
+      mutate(type = str_trim(type)) %>%
+      filter(type %in% input$type_filter) %>%
+      filter(transboundary %in% input$transboundary_filter) %>%
+      filter(revenue_group %in% input$revenue_group_filter)
     
-    ggraph(graph,
-           layout = input$layout) +
-      geom_edge_link(aes(width = weights),
-                     alpha = .6) +
-      scale_edge_width(range = c(0.1, 3)) +
-      geom_node_point(aes(color = id)) +
-      theme(legend.position = "none",
-            panel.background = element_rect(fill='#d9e3f1'),
-            plot.background = element_rect(fill='#d9e3f1'))
-    
+    visNetwork(filtered_nodes, anom_edges) %>%
+      visOptions(highlightNearest = TRUE)
   })
   
+ 
   
   ### Server > Groups
   
