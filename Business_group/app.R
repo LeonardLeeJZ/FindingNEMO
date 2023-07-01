@@ -201,7 +201,7 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput(inputId = "industry_filter",
                   label = "Select Industry",
-                  choices = c("All", "Industrial", "Food", "Seafood-processing", "Consumer-goods", 'Transport-Logistics', 'Fishing-related', 'Multi-Industry')), 
+                  choices = c("All", "Industrial", "Food", "Seafood-processing", "Consumer-goods", 'Transport-Logistics', 'Fishing-related', 'Multi-Industry')),
       selectInput(inputId = "similarity_filter",
                   label = "Select Similarity Measure",
                   choices = c("Degree_Centrality", "Transitivity", "Assortivity"))
@@ -215,17 +215,7 @@ ui <- fluidPage(
 
 # Server
 server <- function(input, output) {
-  # 
-  # mc3_edges_filtered <- reactive({
-  #   mc3_edges %>% filter(str_detect(industry, input$industry_filter))
-  # })
-  # 
-  
-  # #Prepare the nodes from the edges_filtered
-  # mc3_nodes_filtered <- rbind(
-  #   mc3_edges_filtered() %>% distinct(source) %>% rename("id" = "source"),
-  #   mc3_edges_filtered() %>% distinct(target) %>% rename("id" = "target"))
-  
+
   ## **V. Create Graph Objects**
 
   # Overall company graph
@@ -266,7 +256,7 @@ server <- function(input, output) {
                            edges = links_multi, 
                            directed = FALSE)
 
-  output$network_plot <- renderPlot({
+  output$business_plot <- renderPlot({
 
     # Measure degree centrality and save as a column
     V(industrial_graph)$degree <- degree(industrial_graph, mode = "all")
