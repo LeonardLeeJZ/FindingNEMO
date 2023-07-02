@@ -65,10 +65,7 @@ server <- function(input, output) {
                                   edges = filtered_links, 
                                   directed = FALSE)
     
-   # Define Similarity Measure -- may need to use ifelse statements here
-    #ifelse input$measure == "measureName", "usethismeasure", if not then proceed to next ifelse statement >>
-      #ifelse input$measure
-    
+   # Calculate all Similarity Measures first
     V(filtered_graph)$degree <- degree(filtered_graph, mode = "all")
     
     set.seed(1234)
@@ -83,6 +80,9 @@ server <- function(input, output) {
         range = c(0.1,4)
       ) +
       geom_node_point(
+        # Define Similarity Measure foe aes(size = -- may need to use ifelse statements here
+    #ifelse input$measure == "measureName", "usethismeasure", if not then proceed to next ifelse statement >>
+      #ifelse input$measure
         aes(size = degree,
             color = group),
         alpha = .9
