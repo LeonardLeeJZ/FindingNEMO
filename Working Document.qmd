@@ -1,0 +1,133 @@
+---
+title: "Working Sheet"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(tidyverse, dplyr, jsonlite)
+```
+
+```{r}
+core <- read_csv("data/mc3_shinynodes.csv")
+links <- read_csv("data/mc3_links_new.csv")
+mc3_data <- fromJSON("data/MC3.json")
+
+```
+# Load the required package
+```{r}
+
+
+# Read the CSV file
+
+# Create a new column called 'type'
+anom_nodes <- anom_nodes %>%
+  mutate(
+    type = if_else(group == "Shareholder" | group == "Company Contact", group, "Company"),
+    revenue_group = case_when(
+      revenue_group == 1 ~ "High",
+      revenue_group %in% c(2, 3) ~ "Medium",
+      revenue_group %in% c(4, 5) ~ "Low",
+      is.na(revenue_group) ~ "Unreported",
+      TRUE ~ as.character(revenue_group)
+    )
+  )
+
+mc3_edges <- as_tibble(mc3_data$links) %>% 
+  distinct() %>%
+  mutate(source = as.character(source),
+         target = as.character(target),
+         type = as.character(type)) %>%
+  group_by(source, target, type) %>%
+    summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+filtered_edges <- links %>%
+  filter(type == "Beneficial Owner") %>%
+  group_by(source) %>%
+  filter(n() == 1) %>%
+  ungroup() %>%
+  group_by(target) %>%
+  filter(n() > 3) %>%
+  ungroup()
+
+```
+
+# Export the anom_nodes dataset as a CSV file
+write.csv(anom_nodes, file = "data/anom_nodes.csv", row.names = FALSE)
+
+anom_edges <-
+  as_tibble(mc3_data$links) %>%
+  distinct() %>%
+  mutate(source = as.character(source),
+         target = as.character(target),
+         type = as.character(type)) %>%
+  mutate(type = ifelse(type == "Beneficial Owner", "Shareholder", type)) %>%
+  group_by(source, target, type) %>%
+  summarise(weights = n()) %>%
+  filter(source!=target) %>%
+  ungroup()
+
+
+
+write.csv(anom_edges, file = "data/anom_edges.csv", row.names = FALSE)
+
+# View the updated data frame
+
+
+```
+ui <- page_navbar(
+  title = "Network Analysis for Fishy Trading Activity",
+  nav_panel("Anomalous Behaviours"),
+  nav_panel("Anomalies",
+            column(
+              width = 5,
+              fluidRow(
+                column(
+                  width = 12,
+                  checkboxGroupInput("type_filter", "Type", choices = unique(anom_nodes$type), selected = NULL)
+                ),
+                column(
+                  width = 12,
+                  checkboxGroupInput("transboundary_filter", "Transboundary", choices = c("Yes" = "yes", "No" = "no", "NA" = "NA"), selected = NULL)
+                ),
+                column(
+                  width = 12,
+                  checkboxGroupInput("revenue_group_filter", "Revenue", choices = c("High" = 1, "Medium" = c(2,3), "Low" = c(4,5), "Unreported" = NA), selected = NULL)
+                )
+              ),
+              fluidRow(
+                column(
+                  width = 12,
+                  visNetworkOutput("Anom_Graph")
+                )
+              )
+            )
+  ),       
+  nav_panel("Groups"),
+  nav_spacer(),
+  theme = bs_theme(version = 5, bootswatch = "morph")
+)
+
+
+
+ output$Anom_Graph <- renderVisNetwork({
+    filtered_nodes <- anom_nodes %>%
+      mutate(type = str_trim(type)) %>%
+      filter(type %in% input$type_filter) %>%
+      filter(transboundary %in% input$transboundary_filter) %>%
+      filter(revenue_group %in% input$revenue_group_filter)
+    
+    visNetwork(filtered_nodes, anom_edges) %>%
+      visOptions(highlightNearest = TRUE)
+  })
+

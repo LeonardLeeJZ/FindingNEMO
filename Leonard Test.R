@@ -23,7 +23,7 @@ ui <- fluidPage(
       ),
       selectInput(
         inputId = "revenue",
-        label = "Revenue Group:",
+        label = "Select Revenue Group:",
         choices = c(
           "High",
           "Medium",
@@ -34,7 +34,7 @@ ui <- fluidPage(
       ),
       selectInput(
         inputId = "transboundary",
-        label = "Transboundary:",
+        label = "Select Transboundary:",
         choices = c(
           "Yes",
           "No"
@@ -56,7 +56,7 @@ server <- function(input, output) {
     
     # Extract nodes from input$entity
     filter_nodes <- nodes %>%
-      filter(group == input$entity & revenue %in% input$revenue & transboundary %in% input$transboundary)
+      filter(group == input$entity & revenue_group %in% input$revenue & transboundary %in% input$transboundary)
     
     filter_links <- links %>%
       filter(target %in% filter_nodes$id)
