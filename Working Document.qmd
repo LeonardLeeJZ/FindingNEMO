@@ -51,15 +51,40 @@ mc3_edges <- as_tibble(mc3_data$links) %>%
   filter(source!=target) %>%
   ungroup()
 
-filtered_edges <- links %>%
+filtered_edges1 <- links %>%
   filter(type == "Beneficial Owner") %>%
   group_by(source) %>%
   filter(n() == 1) %>%
   ungroup() %>%
   group_by(target) %>%
-  filter(n() > 3) %>%
+  filter(n() >= 3) %>%
   ungroup()
 
+
+
+grouped_edges <- filtered_edges1 %>%
+  group_by(target) %>%
+  summarise(count = n())
+
+
+
+
+
+
+
+multi_entity <- links %>%
+  group_by(target) %>%
+  filter(all(c("Beneficial Owner", "Company Contacts") %in% type)) %>%
+  ungroup() %>%
+  distinct(target)
+
+anom_nodes <- anom_nodes %>%
+  mutate(Ult_BO = ifelse(id %in% grouped_edges$target, "yes", NA)) %>%
+  mutate(Multi_ent = ifelse(id %in% multi_entity$target, "yes", NA))
+```
+
+```{r}
+write.csv(anom_nodes, file = "data/anom_nodes.csv", row.names = FALSE)
 ```
 
 # Export the anom_nodes dataset as a CSV file
@@ -131,3 +156,16 @@ ui <- page_navbar(
       visOptions(highlightNearest = TRUE)
   })
 
+
+#filtered_edges2 <- mc3_edges %>%
+  filter(type == "Beneficial Owner") %>%
+  group_by(source) %>%
+  filter(n() == 1) %>%
+  ungroup() %>%
+  group_by(target) %>%
+  filter(n() >= 3) %>%
+  ungroup()
+  
+  grouped_edges2 <- filtered_edges2 %>%
+  group_by(target) %>%
+  summarise(count = n())
