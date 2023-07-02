@@ -3,7 +3,7 @@ pacman::p_load(igraph, tidygraph, ggraph,
                tidyverse, graphlayouts, bslib)
 
 # Read the data
-nodes <- read_csv("data/mc3_shinynodes.csv")
+nodes <- read_csv("data/anom_nodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
@@ -12,32 +12,32 @@ ui <- fluidPage(
     sidebarPanel = sidebarPanel(
       selectInput(
         inputId = "entity",
-        label = "Select Entity:",
+        label = "Select Special Entity:",
         choices = c(
           `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
           `Shareholder` = "Shareholder",
           `Multi-role Entity` = "Multi-role Entity",
           `Company Contact` = "Company Contact"
         ),
-        selected = "Ultimate Beneficial Owner"
+        multiple = TRUE
       ),
       selectInput(
         inputId = "revenue",
         label = "Select Revenue Group:",
         choices = c(
-          "High",
-          "Medium",
-          "Low",
-          "Unreported"
+          `High` =  "High",
+          `Medium` = "Medium",
+          `Low` = "Low",
+          `Unreported` = "Unreported"
         ),
-        multiple = TRUE
+        selected = "Unreported"
       ),
       selectInput(
         inputId = "transboundary",
         label = "Select Transboundary:",
         choices = c(
-          "Yes",
-          "No"
+          `Yes` = "yes",
+          `No` = "no"
         ),
         multiple = TRUE
       )
@@ -56,7 +56,7 @@ server <- function(input, output) {
     
     # Extract nodes from input$entity
     filter_nodes <- nodes %>%
-      filter(group == input$entity & revenue_group %in% input$revenue & transboundary %in% input$transboundary)
+      filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
     
     filter_links <- links %>%
       filter(target %in% filter_nodes$id)
