@@ -37,9 +37,10 @@ anom_nodes <- core %>%
       is.na(revenue_group) ~ "Unreported",
       TRUE ~ as.character(revenue_group)
     ),
-    transboundary = ifelse(is.na(transboundary), "no", transboundary),
+    transboundary = ifelse(is.na(transboundary), "no", ifelse(transboundary == "unknown", "no", transboundary)),
     group = if_else(group %in% c("Ultimate Beneficial Owner", "Company Contact", "Shareholder", "Multi-role Entity"), group, "Company")
   )
+
 
 
 
@@ -131,3 +132,18 @@ ui <- page_navbar(
   grouped_edges2 <- filtered_edges2 %>%
   group_by(target) %>%
   summarise(count = n())
+  
+  fnode1 <- nodes %>%
+      filter(group == input$entity)
+    
+    fnode2 <- nodes %>%
+      filter(revenue_group == input$revenue)
+    
+    fnode3 <- nodes %>%
+      filter(transboundary == input$transboundary)
+    
+    cnode <- fnode3 %>%
+      distinct(id) %>%
+      left_join(nodes, by = "id") %>%
+      select(id, group, revenue_group, transboundary)
+     

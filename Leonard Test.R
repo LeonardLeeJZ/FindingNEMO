@@ -13,7 +13,7 @@ ui <- fluidPage(
       radioButtons(
         inputId = "entity",
         label = "Select Entity:",
-        choices = c(#radio button method
+        choices = c(
           `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
           `Shareholder` = "Shareholder",
           `Multi-role Entity` = "Multi-role Entity",
@@ -25,7 +25,7 @@ ui <- fluidPage(
         inputId = "revenue",
         label = "Select Revenue Group:",
         choices = c(
-          `High` =  "High",
+          `High` = "High",
           `Medium` = "Medium",
           `Low` = "Low",
           `Unreported` = "Unreported"
@@ -56,13 +56,15 @@ server <- function(input, output) {
   output$networkPlot <- renderVisNetwork({
     
     # Extract nodes from input$entity
+    
     filter_nodes <- nodes %>%
       filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
+    
     
     filter_links <- links %>%
       filter(target %in% filter_nodes$id)
     
-    # distinct source and target from filter_links
+    # distinct source and target from filter_linksm
     distinct_source <- filter_links %>%
       distinct(source) %>%
       rename("id" = "source") 
