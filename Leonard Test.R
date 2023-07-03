@@ -78,6 +78,10 @@ server <- function(input, output) {
       rename("from" = "source",
              "to" = "target")
     
+    
+    # Set node colors based on entity
+    total_nodes$color <- ifelse(total_nodes$id %in% distinct_target$id, "#F8766D", "#aebbff")
+    
     # Plot network
     visNetwork(
       total_nodes, 
@@ -88,7 +92,8 @@ server <- function(input, output) {
         layout = "layout_with_fr"
       ) %>%
       visLegend() %>%
-      visGroups() %>%
+      visGroups(groupname = "Company",
+                color = "#aebbff") %>%
       visEdges() %>%
       visOptions(
         # Specify additional Interactive Elements
