@@ -13,7 +13,7 @@ ui <- fluidPage(
       selectInput(
         inputId = "entity",
         label = "Select Entity:",
-        choices = c(
+        choices = c(#radio button method
           `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
           `Shareholder` = "Shareholder",
           `Multi-role Entity` = "Multi-role Entity",
@@ -33,7 +33,7 @@ ui <- fluidPage(
         ),
         selected = "Unreported"
       ),
-      selectInput(
+      selectInput( #recode NAs as no
         inputId = "transboundary",
         label = "Select Transboundary:",
         choices = c(
