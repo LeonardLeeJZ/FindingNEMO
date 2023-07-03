@@ -10,7 +10,7 @@ ui <- fluidPage(
   titlePanel(title = "Network Analysis for Fishy Trading Activity"),
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      selectInput(
+      radioButtons(
         inputId = "entity",
         label = "Select Entity:",
         choices = c(#radio button method
@@ -19,8 +19,7 @@ ui <- fluidPage(
           `Multi-role Entity` = "Multi-role Entity",
           `Company Contact` = "Company Contact"
         ),
-        multiple = TRUE,
-        selected = c("Ultimate Beneficial Owner", "Shareholder")
+        selected = c("Ultimate Beneficial Owner")
       ),
       selectInput(
         inputId = "revenue",
@@ -33,7 +32,7 @@ ui <- fluidPage(
         ),
         selected = "Unreported"
       ),
-      selectInput( #recode NAs as no
+      selectInput(
         inputId = "transboundary",
         label = "Select Transboundary:",
         choices = c(

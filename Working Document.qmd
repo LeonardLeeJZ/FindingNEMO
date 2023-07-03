@@ -38,7 +38,7 @@ anom_nodes <- core %>%
       TRUE ~ as.character(revenue_group)
     ),
     transboundary = ifelse(is.na(transboundary), "no", transboundary),
-    group = if_else(group %in% c("Ultimate Benificial Owner", "Company Contact", "Shareholder", "Multi-role Entity"), group, "Company")
+    group = if_else(group %in% c("Ultimate Beneficial Owner", "Company Contact", "Shareholder", "Multi-role Entity"), group, "Company")
   )
 
 
