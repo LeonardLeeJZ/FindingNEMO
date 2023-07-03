@@ -12,14 +12,15 @@ ui <- fluidPage(
     sidebarPanel = sidebarPanel(
       selectInput(
         inputId = "entity",
-        label = "Select Special Entity:",
+        label = "Select Entity:",
         choices = c(
           `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
           `Shareholder` = "Shareholder",
           `Multi-role Entity` = "Multi-role Entity",
           `Company Contact` = "Company Contact"
         ),
-        multiple = TRUE
+        multiple = TRUE,
+        selected = c("Ultimate Beneficial Owner", "Shareholder")
       ),
       selectInput(
         inputId = "revenue",
@@ -39,7 +40,8 @@ ui <- fluidPage(
           `Yes` = "yes",
           `No` = "no"
         ),
-        multiple = TRUE
+        multiple = TRUE,
+        selected = c("yes", "no")
       )
     ),
     mainPanel = mainPanel(
