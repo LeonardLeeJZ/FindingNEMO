@@ -45,7 +45,7 @@ ui <- fluidPage(
     ),
     mainPanel = mainPanel(
       title = "Network",
-      visNetworkOutput("networkPlot")
+      visNetworkOutput("networkPlot", height = "800px", width = "800px")
     )
   ),
   theme = bs_theme(bootswatch = "morph")
@@ -59,7 +59,6 @@ server <- function(input, output) {
     
     filter_nodes <- nodes %>%
       filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
-    
     
     filter_links <- links %>%
       filter(target %in% filter_nodes$id)
@@ -85,9 +84,7 @@ server <- function(input, output) {
     # Plot network
     visNetwork(
       total_nodes, 
-      total_links,
-      width = "100%"
-    ) %>%
+      total_links) %>%
       visIgraphLayout(
         layout = "layout_with_fr"
       ) %>%
@@ -102,7 +99,7 @@ server <- function(input, output) {
         nodesIdSelection = TRUE,
         collapse = TRUE
       ) %>%
-      visInteraction(navigationButtons = TRUE)
+      visInteraction(navigationButtons = FALSE)
   })
 }
 

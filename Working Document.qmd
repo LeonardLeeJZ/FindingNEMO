@@ -40,8 +40,20 @@ anom_nodes <- core %>%
     transboundary = ifelse(is.na(transboundary), "no", ifelse(transboundary == "unknown", "no", transboundary)),
     group = if_else(group %in% c("Ultimate Beneficial Owner", "Company Contact", "Shareholder", "Multi-role Entity"), group, "Company")
   )
+```
 
+```{r}
+links <- read_csv("data/mc3_links_new.csv")
 
+filtered_edges1 <- links %>%
+  filter(type == "Beneficial Owner") %>%
+  group_by(target) %>%
+  filter(n() >= 3) %>%
+  ungroup()
+
+grouped_edges <- filtered_edges1 %>%
+  group_by(target) %>%
+  summarise(count = n())
 
 
 ```
