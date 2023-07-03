@@ -40,7 +40,7 @@ ui <- fluidPage(
         selected = "Fishing-related Company"),
         selectInput(inputId = "measure",
               label = "Select Similarity Measure",
-              choices = c("Degree Centrality", "Transitivity", "Assortativity", "Eigenvector_Centrality", "Closeness", "Page_Rank"),
+              choices = c("Degree Centrality", "Eigenvector_Centrality", "Closeness", "Page_Rank"),
               selected ="Degree Centrality")
         
       ),
@@ -69,7 +69,6 @@ server <- function(input, output) {
     # Combine the nodes
     combined_nodes <- bind_rows(filtered_nodes1, filtered_nodes2) %>%
       distinct(id) %>%
-      left_join(nodes, by = "id") %>%
       select(id, group)
     
     # Filter links based filtered_nodes1 to get connections
@@ -100,8 +99,8 @@ server <- function(input, output) {
       activate(nodes) %>%
       mutate(
         degree = degree(filtered_graph, mode = "all"),
-        transitivity = transitivity(filtered_graph, type = "global"),
-        assortativity = assortativity_degree(filtered_graph, directed = FALSE),
+        # transitivity = transitivity(filtered_graph, type = "global"),
+        # assortativity = assortativity_degree(filtered_graph, directed = FALSE),
         eigen = eigen_centrality(filtered_graph)$vector,
         closeness = closeness(filtered_graph),
         page_rank = page_rank(filtered_graph)$vector
@@ -121,11 +120,11 @@ server <- function(input, output) {
       ) +
       geom_node_point(
         aes(size = ifelse(input$measure == "Degree Centrality", degree,
-                          ifelse(input$measure == "Transitivity", transitivity,
-                                 ifelse(input$measure == "Assortativity", assortativity,
+                          # ifelse(input$measure == "Transitivity", transitivity,
+                          #        ifelse(input$measure == "Assortativity", assortativity,
                                         ifelse(input$measure == "Eigenvector_Centrality", eigen,
                                                ifelse(input$measure == "Closeness", closeness,
-                                                      ifelse(input$measure == "Page_Rank", page_rank)))))),
+                                                      ifelse(input$measure == "Page_Rank", page_rank)))),
             color = group),
         alpha = .9
       ) +
