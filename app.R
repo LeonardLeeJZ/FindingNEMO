@@ -1,6 +1,6 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib)
+               tidyverse, graphlayouts, bslib, shinyalert)
 
 # Read the data
 nodes <- read_csv("data/anom_nodes.csv")
