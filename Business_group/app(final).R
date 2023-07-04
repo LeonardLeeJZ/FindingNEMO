@@ -7,7 +7,7 @@ nodes <- read_csv("data/mc3_shinynodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
-  titlePanel(title = "Visualising Similarities in Different Industries"),
+    titlePanel(title = "Visualising Similarities in Different Industries"),
   sidebarLayout(
     sidebarPanel = sidebarPanel(
       selectInput(
