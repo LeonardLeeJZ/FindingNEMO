@@ -9,7 +9,7 @@ links <- read_csv("data/mc3_links_new.csv")
 ui <- fluidPage(
   titlePanel(title = "Network Analysis for Fishy Trading Activity"),
   sidebarLayout(
-    sidebarPanel = sidebarPanel(
+    sidebarPanel = sidebarPanel (
       radioButtons(
         inputId = "entity",
         label = "Select Entity:",

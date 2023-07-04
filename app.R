@@ -55,7 +55,7 @@ ui <- fluidPage(
                  visNetworkOutput("anomPlot")
                )
              )
-    ),
+             ),
     tabPanel("Visualising Different Industries",
              sidebarLayout(
                sidebarPanel = sidebarPanel(
@@ -142,16 +142,16 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
+  ### Page 1 output
+  
   output$anomPlot <- renderVisNetwork({
     
-    # Extract nodes from input$entity
     afilter_nodes <- nodes %>%
       filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
     
     afilter_links <- links %>%
       filter(source %in% afilter_nodes$id | target %in% afilter_nodes$id)
     
-    # distinct source and target from filter_links
     adistinct_source <- afilter_links %>%
       distinct(source) %>%
       rename("id" = "source") 
