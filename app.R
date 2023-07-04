@@ -7,109 +7,362 @@ nodes <- read_csv("data/mc3_shinynodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
-  titlePanel(title = "Network Analysis for Fishy Trading Activity"),
-  sidebarLayout(
-    sidebarPanel(
-      radioButtons(
-        inputId = "entity",
-        label = "Select Entity:",
-        choices = c(
-          `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
-          `Shareholder` = "Shareholder",
-          `Multi-role Entity` = "Multi-role Entity",
-          `Company Contact` = "Company Contact",
-          `Company` = "Company"
-        ),
-        selected = "Ultimate Beneficial Owner"
-      ),
-      selectInput(
-        inputId = "revenue",
-        label = "Select Revenue Group:",
-        choices = c(
-          `High` = "High",
-          `Medium` = "Medium",
-          `Low` = "Low",
-          `Unreported` = "Unreported"
-        ),
-        selected = "Unreported"
-      ),
-      selectInput(
-        inputId = "transboundary",
-        label = "Select Transboundary:",
-        choices = c(
-          `Yes` = "yes",
-          `No` = "no"
-        ),
-        multiple = TRUE,
-        selected = c("yes", "no")
-      )
+   titlePanel(title = "Network Analysis for Fishy Trading Activity"),
+  navbarPage(
+    "N.E.M.O.",
+    id = "tabs",
+    tabPanel("Anomalies",
+             sidebarLayout(
+               sidebarPanel = sidebarPanel(
+                 radioButtons(
+                   inputId = "entity",
+                   label = "Select Entity:",
+                   choices = c(
+                     `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
+                     `Shareholder` = "Shareholder",
+                     `Multi-role Entity` = "Multi-role Entity",
+                     `Company Contact` = "Company Contact",
+                     `Company` = "Company"
+                   ),
+                   selected = c("Ultimate Beneficial Owner")
+                 ),
+                 selectInput(
+                   inputId = "revenue",
+                   label = "Select Revenue Group:",
+                   choices = c(
+                     `High` =  "High",
+                     `Medium` = "Medium",
+                     `Low` = "Low",
+                     `Unreported` = "Unreported"
+                   ),
+                   selected = "Unreported"
+                 ),
+                 selectInput(
+                   inputId = "transboundary",
+                   label = "Select Transboundary:",
+                   choices = c(
+                     `Yes` = "yes",
+                     `No` = "no"
+                   ),
+                   multiple = TRUE,
+                   selected = c("yes", "no")
+                 )
+               ),
+               mainPanel = mainPanel(
+                 title = "Network",
+                 visNetworkOutput("anomPlot")
+               )
+             )
     ),
-    mainPanel(
-      visNetworkOutput("networkPlot"),
-      tags$div(
-        id = "noResultsMsg",
-        style = "text-align: center; font-size: 20px; color: red; margin-top: 100px; display: none;",
-        "No results found for the selected filters."
-      )
+    tabPanel("Visualising Different Industries",
+             sidebarLayout(
+               sidebarPanel = sidebarPanel(
+                 selectInput(
+                   inputId = "industry",
+                   label = "Select Industry:",
+                   choices = c(
+                     `All Industries` = "All", 
+                     `Fishing-related` = "Fishing-related Company",
+                     `Industrial` = "Industrial Company",
+                     `Food-related` = "Food Company",
+                     `Seafood Processing` = "Seafood-processing Company",
+                     `Consumer Goods` = "Consumer-goods Company",
+                     `Transport & Logistics` = "Transport-logistics Company",
+                     `Multi-industry` = "Multi-Industry Company"
+                   ), 
+                   selected = "Fishing-related Company"
+                 ),
+                 selectInput(
+                   inputId = "measure",
+                   label = "Select Similarity Measure",
+                   choices = c(
+                     "Degree Centrality", "Transitivity", "Assortativity", 
+                     "Eigenvector_Centrality", "Closeness", "Page_Rank"
+                   ),
+                   selected = "Degree Centrality"
+                 )
+               ),
+               mainPanel = mainPanel(
+                 title = "Industry-based Networks",
+                 plotOutput("similarityPlot", height = "800px", width = "800px")
+               )
+             )
+    ),
+    tabPanel("Industry Similarity",
+             sidebarLayout(
+               sidebarPanel = sidebarPanel(
+                 selectInput(
+                   inputId = "industry1",
+                   label = "Select Industry:",
+                   choices = c(
+                     `Fishing-related` = "Fishing-related Company",
+                     `Industrial` = "Industrial Company",
+                     `Food-related` = "Food Company",
+                     `Seafood Processing` = "Seafood-processing Company",
+                     `Consumer Goods` = "Consumer-goods Company",
+                     `Transport & Logistics` = "Transport-logistics Company",
+                     `Multi-industry` = "Multi-Industry Company"
+                     
+                   ), 
+                   selected = "Fishing-related Company"),
+                 selectInput(
+                   inputId = "industry2",
+                   label = "Select Industry:",
+                   choices = c(
+                     `Fishing-related` = "Fishing-related Company",
+                     `Industrial` = "Industrial Company",
+                     `Food-related` = "Food Company",
+                     `Seafood Processing` = "Seafood-processing Company",
+                     `Consumer Goods` = "Consumer-goods Company",
+                     `Transport & Logistics` = "Transport-logistics Company",
+                     `Multi-industry` = "Multi-Industry Company"
+                     
+                   ),
+                   selected = "Fishing-related Company"),
+                 selectInput(inputId = "measure",
+                             label = "Select Similarity Measure",
+                             choices = c("Degree Centrality", "Transitivity", "Assortativity", "Eigenvector_Centrality", "Closeness", "Page_Rank"),
+                             selected ="Degree Centrality")
+                 
+               ),
+               
+               
+               mainPanel = mainPanel(
+                 title = "Similarity of Industry-based Networks",
+                 plotOutput("networkPlot", height = "730px", width = "800px")
+               )
+             )
     )
-  )
+  ),
+  theme = bs_theme(bootswatch = "morph")
 )
+
 
 server <- function(input, output) {
   
-  observeEvent(c(input$entity, input$revenue, input$transboundary), {
+  
+  output$anomPlot <- renderVisNetwork({
+    
     # Extract nodes from input$entity
-    filter_nodes <- nodes %>%
-      filter(
-        group == input$entity,
-        revenue_group == input$revenue,
-        transboundary == input$transboundary
+    afilter_nodes <- nodes %>%
+      filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
+    
+    afilter_links <- links %>%
+      filter(source %in% afilter_nodes$id | target %in% afilter_nodes$id
       )
     
-    filter_links <- links %>%
-      filter(
-        source %in% filter_nodes$id | target %in% filter_nodes$id
-      )
+    # distinct source and target from filter_links
+    adistinct_source <- afilter_links %>%
+      distinct(source) %>%
+      rename("id" = "source") 
     
-    if (nrow(filter_nodes) == 0 || nrow(filter_links) == 0) {
-      output$networkPlot <- renderVisNetwork({
-        visNetwork(nodes = NULL, edges = NULL)
-      })
-      showNoResultsMsg(TRUE)
-    } else {
-      output$networkPlot <- renderVisNetwork({
-        visNetwork(
-          nodes = filter_nodes,
-          edges = filter_links,
-          width = "100%"
-        ) %>%
-          visIgraphLayout(layout = "layout_with_fr") %>%
-          visLegend() %>%
-          visGroups(
-            groupname = "Company",
-            color = "#aebbff"
-          ) %>%
-          visEdges() %>%
-          visOptions(
-            # Specify additional Interactive Elements
-            highlightNearest = list(enabled = TRUE, degree = 2, hover = TRUE),
-            # Add drop-down menu to filter by company name
-            nodesIdSelection = TRUE,
-            collapse = TRUE
-          ) %>%
-          visInteraction(navigationButtons = FALSE)
-      })
-      showNoResultsMsg(FALSE)
-    }
+    adistinct_target <- afilter_links %>%
+      distinct(target) %>%
+      rename("id" = "target")
+    
+    atotal_nodes <- bind_rows(adistinct_source, adistinct_target)
+    atotal_links <- afilter_links %>%
+      rename("from" = "source",
+             "to" = "target")
+    # Set node colors based on entity
+    atotal_nodes$color <- ifelse(atotal_nodes$id %in% adistinct_target$id, "#F8766D", "#aebbff")
+    # Plot network
+    visNetwork(
+      atotal_nodes, 
+      atotal_links,
+      width = "100%"
+    ) %>%
+      visIgraphLayout(
+        layout = "layout_with_fr"
+      ) %>%
+      visLegend() %>%
+      visGroups(groupname = "Company",
+                color = "#aebbff") %>%
+      visEdges() %>%
+      visOptions(
+        # Specify additional Interactive Elements
+        highlightNearest = list(enabled = T, degree = 2, hover = T),
+        # Add drop-down menu to filter by company name
+        nodesIdSelection = TRUE,
+        collapse = TRUE
+      ) %>%
+      visInteraction(navigationButtons = FALSE)
   })
   
-  showNoResultsMsg <- function(show) {
-    if (show) {
-      tags$script("document.getElementById('noResultsMsg').style.display = 'block';")
-    } else {
-      tags$script("document.getElementById('noResultsMsg').style.display = 'none';")
-    }
-  }
+  ### Page 2 Output
+  
+  output$similarityPlot <- renderPlot({
+    
+    # Filter nodes data from input$industry
+    filtered_nodes <- nodes %>%
+      filter(if (input$industry == "All") TRUE else group == input$industry)
+    
+    # Filter links based filtered_nodes to get connections
+    filtered_links <- links %>%
+      filter(source %in% filtered_nodes$id)
+    
+    # Get unique source and target
+    links_source <- filtered_links %>%
+      distinct(source) %>%
+      rename("id" = "source")
+    
+    links_target <- filtered_links %>%
+      distinct(target) %>%
+      rename("id" = "target")
+    
+    # bind links to get overall nodes dataframe
+    filtered_nodes_new <- bind_rows(links_source, links_target) %>%
+      left_join(nodes, by = "id") %>%
+      select(id, group)
+    
+    # Create graph object
+    filtered_graph <- tbl_graph(nodes = filtered_nodes_new,
+                                edges = filtered_links, 
+                                directed = FALSE)
+    
+    # Calculate all Similarity Measures first
+    filtered_graph <- filtered_graph %>%
+      activate(nodes) %>%
+      mutate(
+        degree = degree(filtered_graph, mode = "all"),
+        transitivity = transitivity(filtered_graph, type = "global"),
+        assortativity = assortativity_degree(filtered_graph, directed = FALSE),
+        eigen = eigen_centrality(filtered_graph)$vector,
+        closeness = closeness(filtered_graph),
+        page_rank = page_rank(filtered_graph)$vector
+      )
+    
+    set.seed(1234)
+    ggraph(filtered_graph,
+           layout = "nicely"
+    ) +
+      geom_edge_fan(
+        alpha = .6,
+        show.legend = FALSE
+      ) +
+      scale_edge_width(
+        range = c(0.1,4)
+      ) +
+      geom_node_point(
+        aes(size = ifelse(input$measure == "Degree Centrality", degree,
+                          ifelse(input$measure == "Transitivity", transitivity,
+                                 ifelse(input$measure == "Assortativity", assortativity,
+                                        ifelse(input$measure == "Eigenvector_Centrality", eigen,
+                                               ifelse(input$measure == "Closeness", closeness,
+                                                      ifelse(input$measure == "Page_Rank", page_rank)))))),
+            color = group),
+        alpha = .9
+      ) +
+      # Remove the legend for "degree"
+      guides(color = guide_legend(title = "Role:"),
+             size = "none"
+      ) + 
+      geom_node_text(
+        aes(label = ifelse(degree > quantile(degree, .75), id, "")), 
+        size = 2,
+        repel = TRUE
+      ) +
+      theme(
+        plot.title = element_text(size = 16,
+                                  color = "grey20"),
+        legend.title = element_text()
+      )
+  })
+  
+  ### Page 3 output
+  
+  output$networkPlot <- renderPlot({
+    
+    # Filter nodes1 data from input$industry1
+    sfiltered_nodes1 <- nodes %>%
+      filter(group == input$industry1)
+    
+    # Filter nodes2 data from input$industry2
+    sfiltered_nodes2 <- nodes %>%
+      filter(group == input$industry2)
+    
+    # Combine the nodes
+    scombined_nodes <- bind_rows(sfiltered_nodes1, sfiltered_nodes2) %>%
+      distinct(id) %>%
+      left_join(nodes, by = "id") %>%
+      select(id, group)
+    
+    # Filter links based filtered_nodes1 to get connections
+    sfiltered_links <- links %>%
+      filter(source %in% scombined_nodes$id)
+    
+    # Get unique source and target from filtered_links1
+    slinks_source <- sfiltered_links %>%
+      distinct(source) %>%
+      rename("id" = "source")
+    
+    slinks_target <- sfiltered_links %>%
+      distinct(target) %>%
+      rename("id" = "target")
+    
+    
+    # bind links to get overall nodes dataframe1
+    sfiltered_nodes_new <- bind_rows(slinks_source, slinks_target) %>%
+      left_join(nodes, by = "id") %>%
+      select(id, group)
+    
+    # Create graph object1
+    sfiltered_graph <- tbl_graph(nodes = sfiltered_nodes_new,
+                                edges = sfiltered_links, 
+                                directed = FALSE)
+    
+    sfiltered_graph <- sfiltered_graph %>%
+      activate(nodes) %>%
+      mutate(
+        degree = degree(filtered_graph, mode = "all"),
+        transitivity = transitivity(filtered_graph, type = "global"),
+        assortativity = assortativity_degree(filtered_graph, directed = FALSE),
+        eigen = eigen_centrality(filtered_graph)$vector,
+        closeness = closeness(filtered_graph),
+        page_rank = page_rank(filtered_graph)$vector
+      )
+    
+    
+    set.seed(1234)
+    ggraph(sfiltered_graph,
+           layout = "nicely"
+    ) +
+      geom_edge_fan(
+        alpha = .6,
+        show.legend = FALSE
+      ) +
+      scale_edge_width(
+        range = c(0.1,4)
+      ) +
+      geom_node_point(
+        aes(size = ifelse(input$measure == "Degree Centrality", degree,
+                          ifelse(input$measure == "Transitivity", transitivity,
+                                 ifelse(input$measure == "Assortativity", assortativity,
+                                        ifelse(input$measure == "Eigenvector_Centrality", eigen,
+                                               ifelse(input$measure == "Closeness", closeness,
+                                                      ifelse(input$measure == "Page_Rank", page_rank)))))),
+            color = group),
+        alpha = .9
+      ) +
+      
+      # Remove the legend for "degree"
+      guides(color = guide_legend(title = "Role:"),
+             size = "none"
+      ) + 
+      geom_node_text(
+        aes(label = ifelse(degree > quantile(degree, .75), id, "")), 
+        size = 2,
+        repel = TRUE
+      ) +
+      theme(
+        plot.title = element_text(size = 16,
+                                  color = "grey20"),
+        legend.title = element_text()
+      )
+  })
+  
+  
 }
 
+# Run the application 
 shinyApp(ui = ui, server = server)

@@ -1,13 +1,12 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib, shiny, shinyalert)
+               tidyverse, graphlayouts, bslib, shiny, shinyalert, shinyjs)
 
 # Read the data
 nodes <- read_csv("data/anom_nodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
-  useShinyalert(force = TRUE),
   titlePanel(title = "Network Analysis for Fishy Trading Activity"),
   sidebarLayout(
     sidebarPanel = sidebarPanel(
@@ -55,52 +54,35 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  shinyalert(
-    title = "First Time Here?",
-    text = "Hi! Welcome to N.E.M.O. Kindly read the user guide before proceeding.",
-    size = "l", 
-    closeOnEsc = TRUE,
-    closeOnClickOutside = FALSE,
-    html = FALSE,
-    type = "info",
-    showConfirmButton = TRUE,
-    showCancelButton = FALSE,
-    confirmButtonText = "I have read the User Guide",
-    confirmButtonCol = "#AEDEF4",
-    timer = 0,
-    imageUrl = "",
-    animation = TRUE
-  )
-  
   output$networkPlot <- renderVisNetwork({
     
     # Extract nodes from input$entity
-    filter_nodes <- nodes %>%
+    afilter_nodes <- nodes %>%
       filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
     
-    filter_links <- links %>%
-      filter(source %in% filter_nodes$id | target %in% filter_nodes$id
+    afilter_links <- links %>%
+      filter(source %in% afilter_nodes$id | target %in% afilter_nodes$id
       )
     
     # distinct source and target from filter_links
-    distinct_source <- filter_links %>%
+    adistinct_source <- afilter_links %>%
       distinct(source) %>%
       rename("id" = "source") 
     
-    distinct_target <- filter_links %>%
+    adistinct_target <- afilter_links %>%
       distinct(target) %>%
       rename("id" = "target")
     
-    total_nodes <- bind_rows(distinct_source, distinct_target)
-    total_links <- filter_links %>%
+    atotal_nodes <- bind_rows(adistinct_source, adistinct_target)
+    atotal_links <- afilter_links %>%
       rename("from" = "source",
              "to" = "target")
     # Set node colors based on entity
-    total_nodes$color <- ifelse(total_nodes$id %in% distinct_target$id, "#F8766D", "#aebbff")
+    atotal_nodes$color <- ifelse(atotal_nodes$id %in% adistinct_target$id, "#F8766D", "#aebbff")
     # Plot network
     visNetwork(
-      total_nodes, 
-      total_links,
+      atotal_nodes, 
+      atotal_links,
       width = "100%"
     ) %>%
       visIgraphLayout(

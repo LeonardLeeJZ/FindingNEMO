@@ -302,6 +302,36 @@ shinyApp(ui = ui, server = server)
 
 
 ```
+
+
+```{r}
+ useShinyalert(force = TRUE),
+  shinyjs::useShinyjs(),
+
+
+shinyalert(
+    title = "First Time Here?",
+    text = "Hi! Welcome to N.E.M.O. Kindly read the user guide before proceeding.",
+    size = "l", 
+    closeOnEsc = TRUE,
+    closeOnClickOutside = FALSE,
+    html = FALSE,
+    type = "info",
+    showConfirmButton = TRUE,
+    showCancelButton = FALSE,
+    confirmButtonText = "I have read the User Guide",
+    confirmButtonCol = "#AEDEF4",
+    timer = 0,
+    imageUrl = "",
+    animation = TRUE
+  )
+  observe({
+    if (input$tabs == "Anomalies") {
+      shinyjs::runjs('shinyalert();')
+    }
+  })
+
+```
 # Export the anom_nodes dataset as a CSV file
 write.csv(anom_nodes, file = "data/anom_nodes.csv", row.names = FALSE)
 
