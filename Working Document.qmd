@@ -58,10 +58,51 @@ grouped_edges <- filtered_edges1 %>%
 
 ```
 
+
+```{r}
+hnodes <- anom_nodes %>%
+  filter(revenue_group == "High")
+
+mnodes <- anom_nodes %>%
+  filter(revenue_group == "Medium")
+
+lnodes <- anom_nodes %>%
+  filter(revenue_group == "Low")
+
+unodes <- anom_nodes %>%
+  filter(revenue_group == "Unreported")
+
+```
+
+```{r}
+hedges <- links %>%
+  filter(source %in% hnodes$id)
+
+
+```
+
 ```{r}
 write.csv(anom_nodes, file = "data/anom_nodes.csv", row.names = FALSE)
 ```
+```{r}
 
+column(width = 4,
+                     box(
+                       width = NULL, status = "info",
+                       uiOutput("Demo_Category")
+                     )
+                    ),
+
+
+
+
+
+output$Demo_Category<- renderUI({
+
+    selectInput("demo_category","Choose X Axis Variable for Bar Plot:", choices=colnames(demo_dataset())[names(demo_dataset()) !="Participant ID"])
+
+  })
+```
 # Export the anom_nodes dataset as a CSV file
 write.csv(anom_nodes, file = "data/anom_nodes.csv", row.names = FALSE)
 
@@ -84,7 +125,6 @@ write.csv(anom_edges, file = "data/anom_edges.csv", row.names = FALSE)
 # View the updated data frame
 
 
-```
 ui <- page_navbar(
   title = "Network Analysis for Fishy Trading Activity",
   nav_panel("Anomalous Behaviours"),
@@ -159,3 +199,6 @@ ui <- page_navbar(
       left_join(nodes, by = "id") %>%
       select(id, group, revenue_group, transboundary)
      
+  
+     
+    ```

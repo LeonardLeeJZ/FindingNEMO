@@ -3,28 +3,50 @@ pacman::p_load(igraph, tidygraph, ggraph,
                tidyverse, graphlayouts, bslib)
 
 # Read the data
-nodes <- read_csv("data/mc3_shinynodes.csv")
+nodes <- read_csv("data/anom_nodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
   titlePanel(title = "Network Analysis for Fishy Trading Activity"),
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      selectInput(
+      radioButtons(
         inputId = "entity",
         label = "Select Entity:",
         choices = c(
           `Ultimate Beneficial Owner` = "Ultimate Beneficial Owner",
           `Shareholder` = "Shareholder",
           `Multi-role Entity` = "Multi-role Entity",
-          `Company Contact` = "Company Contact"
+          `Company Contact` = "Company Contact",
+          `Company` = "Company"
         ),
-        selected = "Ultimate Beneficial Owner"
+        selected = c("Ultimate Beneficial Owner")
+      ),
+      selectInput(
+        inputId = "revenue",
+        label = "Select Revenue Group:",
+        choices = c(
+          `High` = "High",
+          `Medium` = "Medium",
+          `Low` = "Low",
+          `Unreported` = "Unreported"
+        ),
+        selected = "Unreported"
+      ),
+      selectInput(
+        inputId = "transboundary",
+        label = "Select Transboundary:",
+        choices = c(
+          `Yes` = "yes",
+          `No` = "no"
+        ),
+        multiple = TRUE,
+        selected = c("yes", "no")
       )
     ),
     mainPanel = mainPanel(
       title = "Network",
-      visNetworkOutput("networkPlot")
+      visNetworkOutput("networkPlot", height = "800px", width = "800px")
     )
   ),
   theme = bs_theme(bootswatch = "morph")
@@ -35,8 +57,9 @@ server <- function(input, output) {
   output$networkPlot <- renderVisNetwork({
     
     # Extract nodes from input$entity
+    
     filter_nodes <- nodes %>%
-      filter(group == input$entity)
+      filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
     
     filter_links <- links %>%
       filter(target %in% filter_nodes$id)
@@ -55,28 +78,29 @@ server <- function(input, output) {
       rename("from" = "source",
              "to" = "target")
     
-    # Plot network
     
+    # Set node colors based on entity
+    total_nodes$color <- ifelse(total_nodes$id %in% distinct_target$id, "#F8766D", "#aebbff")
+    
+    # Plot network
     visNetwork(
       total_nodes, 
-      total_links,
-      width = "100%"
-    ) %>%
+      total_links) %>%
       visIgraphLayout(
         layout = "layout_with_fr"
       ) %>%
       visLegend() %>%
-      visGroups() %>%
+      visGroups(groupname = "Company",
+                color = "#aebbff") %>%
       visEdges() %>%
       visOptions(
         # Specify additional Interactive Elements
         highlightNearest = list(enabled = T, degree = 2, hover = T),
         # Add drop-down menu to filter by company name
         nodesIdSelection = TRUE,
-        collapse = TRUE) %>%
-      visInteraction(navigationButtons = TRUE)
-    
-    
+        collapse = TRUE
+      ) %>%
+      visInteraction(navigationButtons = FALSE)
   })
 }
 
