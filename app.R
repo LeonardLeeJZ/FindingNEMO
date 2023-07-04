@@ -9,6 +9,8 @@ links <- read_csv("data/mc3_links_new.csv")
 links1 <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
+  useShinyalert(force = TRUE),
+  shinyjs::useShinyjs(),
    titlePanel(title = "Network Analysis for Fishy Trading Activity"),
   navbarPage(
     "N.E.M.O.",
@@ -141,6 +143,28 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
+  
+  shinyalert(
+    title = "First Time Here?",
+    text = "Hi! Welcome to N.E.M.O. Kindly read the user guide before proceeding.",
+    size = "l", 
+    closeOnEsc = TRUE,
+    closeOnClickOutside = FALSE,
+    html = FALSE,
+    type = "info",
+    showConfirmButton = TRUE,
+    showCancelButton = FALSE,
+    confirmButtonText = "I have read the User Guide",
+    confirmButtonCol = "#AEDEF4",
+    timer = 0,
+    imageUrl = "",
+    animation = TRUE
+  )
+  observe({
+    if (input$tabs == "Anomalies") {
+      shinyjs::runjs('shinyalert();')
+    }
+  })
   
   ### Page 1 output
   
