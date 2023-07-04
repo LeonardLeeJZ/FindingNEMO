@@ -1,12 +1,13 @@
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts, bslib)
+               tidyverse, graphlayouts, bslib, shiny, shinyalert)
 
 # Read the data
 nodes <- read_csv("data/anom_nodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
+  useShinyalert(force = TRUE),
   titlePanel(title = "Network Analysis for Fishy Trading Activity"),
   sidebarLayout(
     sidebarPanel = sidebarPanel(
@@ -53,6 +54,23 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
+  
+  shinyalert(
+    title = "First Time Here?",
+    text = "Hi! Welcome to N.E.M.O. Kindly read the user guide before proceeding.",
+    size = "l", 
+    closeOnEsc = TRUE,
+    closeOnClickOutside = FALSE,
+    html = FALSE,
+    type = "info",
+    showConfirmButton = TRUE,
+    showCancelButton = FALSE,
+    confirmButtonText = "I have read the User Guide",
+    confirmButtonCol = "#AEDEF4",
+    timer = 0,
+    imageUrl = "",
+    animation = TRUE
+  )
   
   output$networkPlot <- renderVisNetwork({
     
