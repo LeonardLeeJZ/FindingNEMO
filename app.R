@@ -3,7 +3,7 @@ pacman::p_load(igraph, tidygraph, ggraph,
                tidyverse, graphlayouts, bslib)
 
 # Read the data
-nodes <- read_csv("data/mc3_shinynodes.csv")
+nodes <- read_csv("data/anom_nodes.csv")
 nodes1 <- read_csv("data/mc3_shinynodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
 links1 <- read_csv("data/mc3_links_new.csv")
@@ -194,11 +194,11 @@ server <- function(input, output) {
   output$similarityPlot <- renderPlot({
     
     # Filter nodes data from input$industry
-    filtered_nodes <- nodes %>%
+    filtered_nodes <- nodes1 %>%
       filter(if (input$industry == "All") TRUE else group == input$industry)
     
     # Filter links based filtered_nodes to get connections
-    filtered_links <- links %>%
+    filtered_links <- links1 %>%
       filter(source %in% filtered_nodes$id)
     
     # Get unique source and target
