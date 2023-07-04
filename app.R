@@ -4,7 +4,9 @@ pacman::p_load(igraph, tidygraph, ggraph,
 
 # Read the data
 nodes <- read_csv("data/mc3_shinynodes.csv")
+nodes1 <- read_csv("data/mc3_shinynodes.csv")
 links <- read_csv("data/mc3_links_new.csv")
+links1 <- read_csv("data/mc3_links_new.csv")
 
 ui <- fluidPage(
    titlePanel(title = "Network Analysis for Fishy Trading Activity"),
@@ -49,7 +51,7 @@ ui <- fluidPage(
                  )
                ),
                mainPanel = mainPanel(
-                 title = "Network",
+                 title = "Detecting Anomalies",
                  visNetworkOutput("anomPlot")
                )
              )
@@ -140,7 +142,6 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  
   output$anomPlot <- renderVisNetwork({
     
     # Extract nodes from input$entity
@@ -148,8 +149,7 @@ server <- function(input, output) {
       filter(group == input$entity & revenue_group == input$revenue & transboundary == input$transboundary)
     
     afilter_links <- links %>%
-      filter(source %in% afilter_nodes$id | target %in% afilter_nodes$id
-      )
+      filter(source %in% afilter_nodes$id | target %in% afilter_nodes$id)
     
     # distinct source and target from filter_links
     adistinct_source <- afilter_links %>%
@@ -274,21 +274,21 @@ server <- function(input, output) {
   output$networkPlot <- renderPlot({
     
     # Filter nodes1 data from input$industry1
-    sfiltered_nodes1 <- nodes %>%
+    sfiltered_nodes1 <- nodes1 %>%
       filter(group == input$industry1)
     
     # Filter nodes2 data from input$industry2
-    sfiltered_nodes2 <- nodes %>%
+    sfiltered_nodes2 <- nodes1 %>%
       filter(group == input$industry2)
     
     # Combine the nodes
     scombined_nodes <- bind_rows(sfiltered_nodes1, sfiltered_nodes2) %>%
       distinct(id) %>%
-      left_join(nodes, by = "id") %>%
+      left_join(nodes1, by = "id") %>%
       select(id, group)
     
     # Filter links based filtered_nodes1 to get connections
-    sfiltered_links <- links %>%
+    sfiltered_links <- links1 %>%
       filter(source %in% scombined_nodes$id)
     
     # Get unique source and target from filtered_links1
@@ -314,12 +314,12 @@ server <- function(input, output) {
     sfiltered_graph <- sfiltered_graph %>%
       activate(nodes) %>%
       mutate(
-        degree = degree(filtered_graph, mode = "all"),
-        transitivity = transitivity(filtered_graph, type = "global"),
-        assortativity = assortativity_degree(filtered_graph, directed = FALSE),
-        eigen = eigen_centrality(filtered_graph)$vector,
-        closeness = closeness(filtered_graph),
-        page_rank = page_rank(filtered_graph)$vector
+        degree = degree(sfiltered_graph, mode = "all"),
+        transitivity = transitivity(sfiltered_graph, type = "global"),
+        assortativity = assortativity_degree(sfiltered_graph, directed = FALSE),
+        eigen = eigen_centrality(sfiltered_graph)$vector,
+        closeness = closeness(sfiltered_graph),
+        page_rank = page_rank(sfiltered_graph)$vector
       )
     
     
